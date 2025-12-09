@@ -11,20 +11,21 @@ import {
   Collapse,
   Tooltip,
 } from "@mui/material";
-import DashboardIcon from "@mui/icons-material/Dashboard";
+import InfoOutlineRoundedIcon from "@mui/icons-material/InfoOutlineRounded";
 import Person2RoundedIcon from "@mui/icons-material/Person2Rounded";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import DashboardRoundedIcon from "@mui/icons-material/DashboardRounded";
 import { Link as RouterLink, useLocation } from "react-router-dom";
-
+import { useNavigate } from "react-router-dom";
 import logo from "../assets/logo/black.png";
 import smallLogo from "../assets/logo/Small-Logo.png";
 
 const drawerWidth = 230;
 
 export default function Sidebar() {
+  const navigate = useNavigate();
   const location = useLocation();
   const [hovered, setHovered] = useState(false);
   const [openSubmenu, setOpenSubmenu] = useState(false);
@@ -79,9 +80,9 @@ export default function Sidebar() {
             icon: <DashboardRoundedIcon />,
           },
           {
-            label: "Customers",
+            label: "info",
             path: "/",
-            icon: <Person2RoundedIcon />,
+            icon: <InfoOutlineRoundedIcon />,
           },
         ].map((item, i) => (
           <ListItemButton
@@ -151,90 +152,112 @@ export default function Sidebar() {
 
         {/* ---------------- HOME DROPDOWN ---------------- */}
 
-        <Tooltip title={!hovered ? "Home" : ""} placement="right">
-          <ListItemButton
-            onClick={toggleSubmenu}
+        <ListItemButton
+          onClick={toggleSubmenu}
+          sx={{
+            borderRadius: "12px",
+            mb: 0.8,
+            height: 46,
+            position: "relative",
+            overflow: "hidden",
+            pl: hovered ? 2 : 1.2,
+            "&:hover": {
+              backgroundColor: "rgba(255,123,0,0.12) !important",
+            },
+          }}
+        >
+          {openSubmenu && (
+            <Box
+              sx={{
+                position: "absolute",
+                left: 0,
+                width: 4,
+                height: "70%",
+                background: "#ff7b00",
+                borderRadius: "0 6px 6px 0",
+                top: "15%",
+                boxShadow: "0 0 6px rgba(255,123,0,0.5)",
+              }}
+            />
+          )}
+
+          <ListItemIcon
             sx={{
-              borderRadius: "12px",
-              mb: 0.8,
-              height: 46,
-              position: "relative",
-              overflow: "hidden",
-              pl: hovered ? 2 : 1.2,
-              "&:hover": {
-                backgroundColor: "rgba(255,123,0,0.12) !important",
-              },
+              color: openSubmenu ? "#ff7b00" : "#777",
+              minWidth: hovered ? 40 : "auto",
+              width: hovered ? "auto" : "100%",
+              justifyContent: hovered ? "flex-start" : "center",
+              transition: "0.3s",
             }}
           >
-            {openSubmenu && (
-              <Box
-                sx={{
-                  position: "absolute",
-                  left: 0,
-                  width: 4,
-                  height: "70%",
-                  background: "#ff7b00",
-                  borderRadius: "0 6px 6px 0",
-                  top: "15%",
-                  boxShadow: "0 0 6px rgba(255,123,0,0.5)",
+            <Person2RoundedIcon />
+          </ListItemIcon>
+
+          {hovered && (
+            <>
+              <ListItemText
+                primary="Customers"
+                primaryTypographyProps={{
+                  fontSize: 15,
+                  fontWeight: 600,
+                  color: openSubmenu ? "#ff7b00" : "#333",
                 }}
               />
-            )}
-
-            <ListItemIcon
-              sx={{
-                color: openSubmenu ? "#ff7b00" : "#777",
-                minWidth: hovered ? 40 : "auto",
-                width: hovered ? "auto" : "100%",
-                justifyContent: hovered ? "flex-start" : "center",
-                transition: "0.3s",
-              }}
-            >
-              <DashboardIcon />
-            </ListItemIcon>
-
-            {hovered && (
-              <>
-                <ListItemText
-                  primary="Home"
-                  primaryTypographyProps={{
-                    fontSize: 15,
-                    fontWeight: 600,
-                    color: openSubmenu ? "#ff7b00" : "#333",
-                  }}
-                />
-                {openSubmenu ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-              </>
-            )}
-          </ListItemButton>
-        </Tooltip>
+              {openSubmenu ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+            </>
+          )}
+        </ListItemButton>
 
         {/* SUBMENU ITEMS */}
         <Collapse in={openSubmenu && hovered} timeout={200}>
-          <List sx={{ pl: 7 }}>
-            {["Overview", "Live Network", "To-Do's"].map((text, i) => (
-              <ListItemButton
-                key={i}
-                sx={{
-                  py: 0.6,
-                  mb: 0.5,
-                  borderRadius: "8px",
-                  "&:hover": {
-                    backgroundColor: "rgba(255,123,0,0.08) !important",
-                  },
-                }}
-              >
-                <ListItemText
-                  primary={text}
-                  primaryTypographyProps={{
-                    fontSize: 14,
-                    color: "#444",
-                  }}
-                />
-              </ListItemButton>
-            ))}
-          </List>
-        </Collapse>
+  <List sx={{ position: "relative" }}>
+    {["Profile Detail", "Passwords", "Running Applications"].map(
+      (text, i) => (
+        <ListItemButton
+          key={i}
+          onClick={() => {
+            if (text === "Profile Detail") {
+              navigate("/Customer"); // Redirect
+            }
+            // aap yahan passwords ya running applications ke liye bhi route set kar sakte ho
+          }}
+          sx={{
+            py: 0.7,
+            pl: 4,
+            mb: 0.5,
+            borderRadius: "8px",
+            display: "flex",
+            alignItems: "center",
+            gap: 1,
+            position: "relative",
+            "&:hover": {
+              backgroundColor: "rgba(255,123,0,0.08) !important",
+            },
+          }}
+        >
+          {/* Dot Indicator */}
+          <Box
+            sx={{
+              width: 7,
+              height: 7,
+              borderRadius: "50%",
+              background: "#ff7b00",
+              flexShrink: 0,
+            }}
+          />
+
+          <ListItemText
+            primary={text}
+            primaryTypographyProps={{
+              fontSize: 14,
+              color: "#444",
+            }}
+          />
+        </ListItemButton>
+      )
+    )}
+  </List>
+</Collapse>
       </List>
 
       {/* Bottom Actions */}
