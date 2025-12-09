@@ -15,6 +15,7 @@ import {
   ListItem,
   ListItemText,
   ListItemIcon,
+  Tooltip 
 } from "@mui/material";
 
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
@@ -44,95 +45,132 @@ const customerData = {
 };
 
 /* ------------------------- REUSABLE FOLDER TREE ------------------------- */
-const FolderTree = ({ folder, addSubfolder, uploadFiles, handleViewFile }) => {
-  const [subName, setSubName] = useState("");
+const FolderTree = ({ folders, selectedFolderId, setSelectedFolderId }) => {
+  const renderTree = (folder, level = 0) => (
+    <Box
+      key={folder.id}
+      sx={{
+        pl: level * 2,
+        py: 0.5,
+        cursor: "pointer",
+        display: "flex",
+        alignItems: "center",
+        bgcolor: folder.id === selectedFolderId ? "#FFE5D6" : "transparent",
+        borderRadius: 1,
+        "&:hover": { bgcolor: "#FFE5D6" },
+      }}
+      onClick={() => setSelectedFolderId(folder.id)}
+    >
+      <FolderIcon sx={{ color: "#FF6C0C", mr: 1 }} />
+      <Typography fontSize={14}>{folder.name}</Typography>
+    </Box>
+  );
 
   return (
-    <Accordion sx={{ mb: 2, borderRadius: 2 }}>
-      <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-        <FolderIcon sx={{ color: "#e65f09", mr: 1 }} />
-        <Typography fontWeight={600}>{folder.name}</Typography>
-      </AccordionSummary>
+    <Box>
+      {folders.map((folder) => (
+        <React.Fragment key={folder.id}>
+          {renderTree(folder)}
+          {folder.subfolders &&
+            folder.subfolders.map((sub) => renderTree(sub, 1))}
+        </React.Fragment>
+      ))}
+    </Box>
+  );
+};
 
-      <AccordionDetails>
-        {/* Upload Files */}
-        <Button
-          variant="outlined"
-          component="label"
-          startIcon={<UploadFileIcon />}
-          sx={{ textTransform: "none", mb: 2 }}
-        >
-          Upload Files
-          <input
-            type="file"
-            hidden
-            multiple
-            onChange={(e) => uploadFiles(folder.id, e)}
-          />
-        </Button>
+const DocumentPanel = ({
+  folder,
+  addSubfolder,
+  uploadFiles,
+  handleViewFile
+}) => {
+  const [subName, setSubName] = useState("");
 
-        {/* FILE LIST */}
-        <List>
-          {folder.files.map((fileObj, index) => (
-            <ListItem key={index} sx={{ pl: 0 }}>
+  if (!folder) {
+    return (
+      <Typography sx={{ color: "gray", mt: 3 }}>
+        Select a folder from the left panel
+      </Typography>
+    );
+  }
+
+  return (
+    <Box>
+      {/* Upload Files */}
+      <Button
+        variant="outlined"
+        component="label"
+        startIcon={<UploadFileIcon />}
+        sx={{ textTransform: "none", mb: 2, borderRadius: 2 }}
+      >
+        Upload Files
+        <input
+          type="file"
+          hidden
+          multiple
+          onChange={(e) => uploadFiles(folder.id, e)}
+        />
+      </Button>
+
+      {/* File List */}
+      <List sx={{ mb: 2, bgcolor: "#fafafa", borderRadius: 1, p: 1 }}>
+        {folder.files.length > 0 ? (
+          folder.files.map((file, idx) => (
+            <ListItem
+              key={idx}
+              sx={{
+                borderRadius: 1,
+                mb: 0.5,
+                bgcolor: "#fff",
+                boxShadow: "0 1px 2px rgba(0,0,0,0.05)"
+              }}
+              secondaryAction={
+                <Tooltip title="View File">
+                  <Button
+                    variant="text"
+                    color="primary"
+                    onClick={() => handleViewFile(file)}
+                    sx={{ textTransform: "none" }}
+                  >
+                    View
+                  </Button>
+                </Tooltip>
+              }
+            >
               <ListItemIcon>
-                <InsertDriveFileIcon />
+                <InsertDriveFileIcon sx={{ color: "#1976D2" }} />
               </ListItemIcon>
-
-              <ListItemText primary={fileObj.name} />
-
-              {/* VIEW BUTTON */}
-              <Button
-                variant="text"
-                color="primary"
-                onClick={() => handleViewFile(fileObj)}
-                sx={{ textTransform: "none" }}
-              >
-                View
-              </Button>
+              <ListItemText primary={file.name} primaryTypographyProps={{ fontSize: 14 }} />
             </ListItem>
-          ))}
+          ))
+        ) : (
+          <Typography sx={{ color: "gray", px: 1 }}>No files uploaded.</Typography>
+        )}
+      </List>
 
-          {folder.files.length === 0 && (
-            <Typography sx={{ color: "gray" }}>No files uploaded.</Typography>
-          )}
-        </List>
-
-        {/* CREATE SUBFOLDER */}
-        <Box display="flex" gap={1} mt={2}>
-          <TextField
-            size="small"
-            placeholder="Create Subfolder"
-            value={subName}
-            onChange={(e) => setSubName(e.target.value)}
-          />
-          <Button
-            variant="contained"
-            color="warning"
-            startIcon={<CreateNewFolderIcon />}
-            onClick={() => {
-              addSubfolder(folder.id, subName);
-              setSubName("");
-            }}
-          >
-            Add
-          </Button>
-        </Box>
-
-        {/* RENDER NESTED SUBFOLDERS */}
-        <Box mt={2} ml={3}>
-          {folder.subfolders.map((sub) => (
-            <FolderTree
-              key={sub.id}
-              folder={sub}
-              addSubfolder={addSubfolder}
-              uploadFiles={uploadFiles}
-              handleViewFile={handleViewFile}
-            />
-          ))}
-        </Box>
-      </AccordionDetails>
-    </Accordion>
+      {/* Create Subfolder */}
+      <Box display="flex" gap={1}>
+        <TextField
+          size="small"
+          placeholder="Create Subfolder"
+          value={subName}
+          onChange={(e) => setSubName(e.target.value)}
+          sx={{ flex: 1 }}
+        />
+        <Button
+          variant="contained"
+          color="warning"
+          startIcon={<CreateNewFolderIcon />}
+          onClick={() => {
+            addSubfolder(folder.id, subName);
+            setSubName("");
+          }}
+        >
+          Add
+        </Button>
+      </Box>
+    </Box>
   );
 };
 
@@ -247,6 +285,21 @@ export default function ViewCustomer() {
     window.open(googleViewer, "_blank");
   };
 
+    const [selectedFolderId, setSelectedFolderId] = useState(null);
+
+  const findFolderById = (id, folderList) => {
+    for (let f of folderList) {
+      if (f.id === id) return f;
+      if (f.subfolders) {
+        const found = findFolderById(id, f.subfolders);
+        if (found) return found;
+      }
+    }
+    return null;
+  };
+
+  const selectedFolder = findFolderById(selectedFolderId, folders);
+
   return (
     <Box p={1}>
       {/* Heading & Breadcrumb */}
@@ -335,17 +388,22 @@ export default function ViewCustomer() {
       </Card>
 
       {/* ---------------- DOCUMENT MANAGER ---------------- */}
-      <Card sx={{ borderRadius: 3, p: 2 }}>
-        <Typography variant="h6" fontWeight={600} mb={2}>
-          Document Manager
-        </Typography>
-
-        <Box display="flex" gap={2} mb={3}>
+      <Card sx={{ borderRadius: 3, p: 3, display: "flex", gap: 3 }}>
+      {/* LEFT PANEL: Folder Tree */}
+      <Box sx={{ width: 250, borderRight: "1px solid #ddd", pr: 2 }}>
+        <Typography fontWeight={600} mb={2}>Folders</Typography>
+        <FolderTree
+          folders={folders}
+          selectedFolderId={selectedFolderId}
+          setSelectedFolderId={setSelectedFolderId}
+        />
+        <Box display="flex" gap={1} mt={2}>
           <TextField
-            label="Create New Folder"
             size="small"
+            placeholder="New Folder"
             value={folderName}
             onChange={(e) => setFolderName(e.target.value)}
+            sx={{ flex: 1 }}
           />
           <Button
             variant="contained"
@@ -353,26 +411,24 @@ export default function ViewCustomer() {
             startIcon={<CreateNewFolderIcon />}
             onClick={handleAddMainFolder}
           >
-            Add Folder
+            Add
           </Button>
         </Box>
+      </Box>
 
-        {folders.map((f) => (
-          <FolderTree
-            key={f.id}
-            folder={f}
-            addSubfolder={addSubfolder}
-            uploadFiles={handleUploadFiles}
-            handleViewFile={handleViewFile}
-          />
-        ))}
-
-        {folders.length === 0 && (
-          <Typography sx={{ color: "gray" }}>
-            No folders created yet.
-          </Typography>
-        )}
-      </Card>
+      {/* RIGHT PANEL: Folder Actions */}
+      <Box sx={{ flex: 1 }}>
+        <Typography fontWeight={600} mb={2}>
+          {selectedFolder ? selectedFolder.name : "Select a folder"}
+        </Typography>
+        <DocumentPanel
+          folder={selectedFolder}
+          addSubfolder={addSubfolder}
+          uploadFiles={handleUploadFiles}
+          handleViewFile={handleViewFile}
+        />
+      </Box>
+    </Card>
     </Box>
   );
 }
